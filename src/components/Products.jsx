@@ -1,27 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { request } from '@/api';
-import { useSelector } from 'react-redux';
+import React, { useEffect, useState } from "react";
+import { request } from "@/api";
+import { useSelector } from "react-redux";
 
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingProduct, setEditingProduct] = useState(null); 
+  const [editingProduct, setEditingProduct] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    image: '',
+    name: "",
+    price: "",
+    image: "",
   });
+  
+  
   const token = useSelector((s) => s.token.value);
 
   useEffect(() => {
     request
-      .get('product/get')
+      .get("product/get")
       .then((response) => {
         setProducts(response.data);
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Error fetching products:', error);
+        console.error("Error fetching products:", error);
         setLoading(false);
       });
   }, []);
@@ -37,10 +39,9 @@ const Products = () => {
         setProducts(products.filter((product) => product.id !== productId));
       })
       .catch((error) => {
-        console.error('Error deleting product:', error);
+        console.error("Error deleting product:", error);
       });
   };
-
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -52,9 +53,14 @@ const Products = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
+  
+    const updatedData = {
+      ...formData,
+      price: Number(formData.price),
+    };
+  
     request
-      .put(`/product/update/${editingProduct.id}`, formData, {
+      .patch(`/product/update/${editingProduct.id}`, updatedData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -63,13 +69,15 @@ const Products = () => {
         const updatedProducts = products.map((product) =>
           product.id === editingProduct.id ? response.data : product
         );
-        setProducts(updatedProducts); 
+        setProducts(updatedProducts);
         setEditingProduct(null);
       })
       .catch((error) => {
-        console.error('Error updating product:', error);
+        console.error("Error updating product:", error.response?.data || error.message);
       });
   };
+  
+  
 
   if (loading) {
     return <div>Loading products...</div>;
@@ -92,7 +100,19 @@ const Products = () => {
         <p className="mt-1 text-gray-600">${product.price}</p>
       </div>
       <div className="flex justify-between mt-4">
-
+        <button
+          onClick={() => {
+            setEditingProduct(product);
+            setFormData({
+              name: product.name,
+              price: product.price,
+              image: product.image,
+            });
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition duration-300"
+        >
+          Edit
+        </button>
         <button
           onClick={() => handleDelete(product.id)}
           className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition duration-300"
@@ -116,7 +136,10 @@ const Products = () => {
             <h2 className="text-2xl font-semibold mb-4">Edit Product</h2>
 
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Product Name
               </label>
               <input
@@ -131,7 +154,10 @@ const Products = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="price"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Price
               </label>
               <input
@@ -146,7 +172,10 @@ const Products = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="image" className="block text-sm font-medium text-gray-700">
+              <label
+                htmlFor="image"
+                className="block text-sm font-medium text-gray-700"
+              >
                 Image URL
               </label>
               <input
@@ -169,7 +198,7 @@ const Products = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setEditingProduct(null)} 
+                onClick={() => setEditingProduct(null)}
                 className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 transition duration-300"
               >
                 Cancel
